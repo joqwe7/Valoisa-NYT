@@ -1,379 +1,261 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, ShoppingCart, Sparkles, MapPin, Calendar, Clock, Mail, Phone, User, MessageCircle, CheckCircle } from 'lucide-react';
+# Retry: create single-file HTML using a placeholder to avoid f-string brace issues.
+import os, base64, textwrap
 
-const App = () => {
-  const [cart, setCart] = useState({ items: [], pickup: false });
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  const [activeFaq, setActiveFaq] = useState(null);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [formErrors, setFormErrors] = useState({});
+OUT_DIR = "/mnt/data/valoisanyt"
+LOGO_PATH = os.path.join(OUT_DIR, "logo.webp")
+OUT_FILE = os.path.join(OUT_DIR, "valoisanyt_single.html")
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = localStorage.getItem('valoisaCart');
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
-  }, []);
+# Read logo and create data URI if available
+logo_data_uri = ""
+if os.path.exists(LOGO_PATH):
+    with open(LOGO_PATH, "rb") as f:
+        b = f.read()
+        b64 = base64.b64encode(b).decode("ascii")
+        logo_data_uri = f"data:image/webp;base64,{b64}"
+else:
+    logo_data_uri = ""
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('valoisaCart', JSON.stringify(cart));
-  }, [cart]);
-
-  const addToCart = () => {
-    const newItem = {
-      id: 'valputki',
-      name: 'Valputki',
-      price: 5.00,
-      quantity: quantity
-    };
-
-    setCart(prev => ({
-      ...prev,
-      items: [newItem]
-    }));
-
-    setToastMessage(`${quantity} Valputki${quantity > 1 ? 'a' : ''} lisätty ostoskoriin!`);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
-
-  const updateQuantity = (newQuantity) => {
-    if (newQuantity >= 1 && newQuantity <= 99) {
-      setQuantity(newQuantity);
-    }
-  };
-
-  const togglePickup = () => {
-    setCart(prev => ({
-      ...prev,
-      pickup: !prev.pickup
-    }));
-  };
-
-  const getTotal = () => {
-    const subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const shipping = cart.pickup ? 0 : 4.90;
-    return subtotal + shipping;
-  };
-
-  const completeOrder = () => {
-    setToastMessage('Tilaus vastaanotettu! Kiitos Valoisasta valinnastasi!');
-    setShowToast(true);
-    setCart({ items: [], pickup: false });
-    setTimeout(() => setShowToast(false), 3000);
-  };
-
-  const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+%%%LATEX_BLOCK_1%%%{activeFaq === index ? 'rotate-180' : ''}`} 
-                      size={24} 
-                    />
-                  </button>
-                  {activeFaq === index && (
-                    <div className="px-6 pb-6 text-gray-300">
-                      {faq.answer}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+html_template = """
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Valoisa NYT — Valputki €5 | Valon Kaupunki</title>
+  <meta name="description" content="Valoisa NYT myy edullisen Valputki LED-valoputken — €5 kappale. Nouto Valon Kaupunki -tapahtumassa." />
+  <meta property="og:title" content="Valoisa NYT — Valputki €5" />
+  <meta property="og:description" content="Edullinen LED-valoputki messuille ja kotiin — €5/kpl. Tule tapaamaan meitä Valon Kaupunki -tapahtumassa." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preload" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+  /* inlined styles (condensed) */
+  :root{--bg:#0B1220;--cyan:#28E0FF;--amber:#FFC857;--white:#FFFFFF;--muted:#9aa6b2;--accent-grad: linear-gradient(90deg,var(--cyan),#7A5CFF);--container:1100px}
+  *{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;background:var(--bg);color:var(--white);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;line-height:1.4}
+  .container{max-width:var(--container);margin:0 auto;padding:1rem}.skip-link{position:absolute;left:0;top:-40px;background:#000;color:#fff;padding:.5rem;z-index:200}.skip-link:focus{top:8px}
+  .site-header{position:sticky;top:0;background:linear-gradient(180deg,rgba(11,18,32,.9),rgba(11,18,32,.6));backdrop-filter: blur(4px);border-bottom:1px solid rgba(255,255,255,.04);z-index:100}
+  .header-inner{display:flex;align-items:center;justify-content:space-between;padding:.6rem 0}.brand{display:flex;align-items:center;gap:.6rem}.logo{width:56px;height:56px;object-fit:contain;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.6)}.brand-text h1{margin:0;font-family:Poppins,Inter,system-ui;font-weight:700;font-size:1.1rem}.tagline{margin:0;font-size:.8rem;color:var(--muted)}
+  .nav ul{display:flex;gap:.6rem;list-style:none;margin:0;padding:0;align-items:center}.nav a{color:var(--white);text-decoration:none;padding:.4rem .6rem;border-radius:6px}.nav a:focus, .nav a:hover{outline:2px solid rgba(255,255,255,.06)}
+  .btn{cursor:pointer;border:0;padding:.5rem .9rem;border-radius:10px;font-weight:600}.btn-ghost{background:transparent;color:var(--white);border:1px solid rgba(255,255,255,.06)}.btn-primary{background:var(--accent-grad);background-size:200% 100%;color:var(--bg);padding:.6rem 1rem;box-shadow:0 8px 24px rgba(40,224,255,.06);border-radius:14px}.btn-primary:focus{outline:3px solid rgba(40,224,255,.18)}
+  .hero{padding:3rem 0;background:linear-gradient(180deg,rgba(10,12,18,0.6),transparent 60%);border-bottom:1px solid rgba(255,255,255,.02)}.hero-inner{display:grid;grid-template-columns:1fr 320px;gap:1rem;align-items:center}.hero-copy h2{font-size:1.6rem;margin:0 0 .6rem;color:var(--white)}.lead{color:var(--muted);margin:0 0 1rem}
+  .neon-card{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));padding:1rem;border-radius:12px;box-shadow:0 8px 40px rgba(12,16,24,.6)}.neon-thumb{height:180px;width:260px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-weight:700;font-size:1.4rem;color:var(--bg);background:var(--white);opacity:.06;backdrop-filter: blur(6px)}
+  .product-section{padding:2.2rem 0}.product-card{display:flex;gap:1rem;align-items:flex-start;background:linear-gradient(180deg,rgba(255,255,255,.01),transparent);padding:1rem;border-radius:12px;border:1px solid rgba(255,255,255,.03)}.product-image{width:180px;height:120px;object-fit:contain;border-radius:8px;background:linear-gradient(90deg,rgba(40,224,255,.06),rgba(255,200,87,.04));padding:.4rem}.product-details h4{margin:.2rem 0}.muted{color:var(--muted)}.specs{list-style:none;padding:0;margin:.4rem 0 .8rem 0;color:var(--muted)}
+  .purchase-row{display:flex;gap:.6rem;align-items:center}.price{font-size:1.4rem;font-weight:700;color:var(--amber)}.qty input{width:68px;padding:.4rem;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:transparent;color:var(--white)}
+  .badges{margin-top:.6rem}.badge{display:inline-block;background:rgba(255,255,255,.03);padding:.3rem .5rem;border-radius:8px;margin-right:.4rem;font-size:.85rem;color:var(--muted)}
+  .note{color:var(--muted);margin-top:.8rem}
+  .event-section{padding:2rem 0;border-top:1px solid rgba(255,255,255,.02)}.event-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:.8rem}.map-placeholder{height:120px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  .pickup-toggle{display:flex;gap:.6rem;align-items:center;margin-top:1rem;color:var(--muted)}
+  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-top:.8rem}.feature{background:rgba(255,255,255,.02);padding:1rem;border-radius:8px;text-align:center;color:var(--muted)}
+  .faq-section{padding:2rem 0}.accordion details{background:rgba(255,255,255,.02);padding:.8rem;border-radius:8px;margin-bottom:.6rem}
+  .contact-section{padding:2rem 0}.contact-section input, .contact-section textarea{width:100%;padding:.6rem;border-radius:8px;border:1px solid rgba(255,255,255,.04);background:transparent;color:var(--white);margin-bottom:.6rem}
+  .site-footer{padding:1rem 0;border-top:1px solid rgba(255,255,255,.02);margin-top:2rem}.footer-inner{display:flex;justify-content:space-between;align-items:center;gap:1rem;color:var(--muted)}
+  .cart-drawer{position:fixed;right:16px;top:80px;width:320px;background:linear-gradient(180deg,#07111a, #07121f);border-radius:12px;padding:1rem;border:1px solid rgba(255,255,255,.04);box-shadow:0 12px 40px rgba(3,8,14,.7);display:none;z-index:300}.cart-drawer.open{display:block}.cart-header{display:flex;justify-content:space-between;align-items:center}.cart-body{min-height:80px;margin-top:.6rem}.cart-item{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px dashed rgba(255,255,255,.02)}.totals{margin-top:.6rem;display:flex;justify-content:space-between;align-items:center}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:rgba(0,0,0,.7);padding:.8rem 1rem;border-radius:8px;display:none;color:var(--white)}
+  @media (max-width:800px){.hero-inner{grid-template-columns:1fr;gap:1rem}.nav ul{display:none}}
+  .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <img src="__LOGO_DATA_URI__" alt="Valoisa NYT logo" class="logo" />
+        <div class="brand-text">
+          <h1>Valoisa NYT</h1>
+          <p class="tagline">Light up your night.</p>
         </div>
-      </section>
-
-      {/* Contact/Footer */}
-      <footer id="contact" className="py-20 bg-[#0B1220] border-t border-[#28E0FF]/20">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
-            <div>
-              <div className="flex items-center gap-2 mb-8">
-                <Sparkles className="text-[#28E0FF] w-8 h-8" />
-                <span className="text-2xl font-bold bg-gradient-to-r from-[#28E0FF] to-[#7A5CFF] bg-clip-text text-transparent">
-                  Valoisa NYT
-                </span>
-              </div>
-              
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3">
-                  <Mail className="text-[#28E0FF]" size={20} />
-                  <span>info@valoisanyt.fi</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="text-[#28E0FF]" size={20} />
-                  <span>+358 40 123 4567</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="text-[#28E0FF]" size={20} />
-                  <span>Helsinki, Suomi</span>
-                </div>
-              </div>
-              
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-4">Liity uutiskirjeeseen</h3>
-                <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
-                  <input
-                    type="email"
-                    value={newsletterEmail}
-                    onChange={(e) => setNewsletterEmail(e.target.value)}
-                    placeholder="Sähköpostiosoitteesi"
-                    className="flex-1 bg-[#1a2a4a] border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:border-[#28E0FF]"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="bg-[#28E0FF] text-[#0B1220] px-6 py-3 rounded-lg font-semibold hover:bg-[#28E0FF]/90 transition-colors"
-                  >
-                    Tilaa
-                  </button>
-                </form>
-                {formErrors.newsletter && (
-                  <p className="text-red-400 text-sm mt-2">{formErrors.newsletter}</p>
-                )}
-              </div>
-              
-              <div className="flex gap-4">
-                <div className="w-10 h-10 bg-[#1a2a4a] rounded-full flex items-center justify-center hover:bg-[#28E0FF] hover:text-[#0B1220] transition-colors cursor-pointer">
-                  <MessageCircle size={20} />
-                </div>
-                <div className="w-10 h-10 bg-[#1a2a4a] rounded-full flex items-center justify-center hover:bg-[#28E0FF] hover:text-[#0B1220] transition-colors cursor-pointer">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-6">Ota yhteyttä</h3>
-              <form onSubmit={handleContactSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-2">Nimi</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-                    <input
-                      type="text"
-                      id="name"
-                      value={contactForm.name}
-                      onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
-                      className="w-full bg-[#1a2a4a] border border-gray-600 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-[#28E0FF]"
-                      required
-                    />
-                  </div>
-                  {formErrors.name && <p className="text-red-400 text-sm mt-1">{formErrors.name}</p>}
-                </div>
-                
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-2">Sähköposti</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-                    <input
-                      type="email"
-                      id="email"
-                      value={contactForm.email}
-                      onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                      className="w-full bg-[#1a2a4a] border border-gray-600 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-[#28E0FF]"
-                      required
-                    />
-                  </div>
-                  {formErrors.email && <p className="text-red-400 text-sm mt-1">{formErrors.email}</p>}
-                </div>
-                
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium mb-2">Viesti</label>
-                  <div className="relative">
-                    <MessageCircle className="absolute left-3 top-3 text-gray-500" size={18} />
-                    <textarea
-                      id="message"
-                      value={contactForm.message}
-                      onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
-                      rows={4}
-                      className="w-full bg-[#1a2a4a] border border-gray-600 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-[#28E0FF]"
-                      required
-                    ></textarea>
-                  </div>
-                  {formErrors.message && <p className="text-red-400 text-sm mt-1">{formErrors.message}</p>}
-                </div>
-                
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-[#28E0FF] to-[#7A5CFF] py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-[#28E0FF]/30 transition-all"
-                >
-                  Lähetä viesti
-                </button>
-              </form>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-16 pt-8 text-center text-gray-500">
-            <div className="flex flex-col md:flex-row justify-center gap-6 mb-4">
-              <a href="#" className="hover:text-[#28E0FF] transition-colors">Tietosuojaseloste</a>
-              <a href="#" className="hover:text-[#28E0FF] transition-colors">Käyttöehdot</a>
-              <a href="#" className="hover:text-[#28E0FF] transition-colors">Palautukset</a>
-            </div>
-            <p>© 2024 Valoisa NYT. Kaikki oikeudet pidätetään.</p>
-          </div>
-        </div>
-      </footer>
-
-      {/* Cart Drawer */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setIsCartOpen(false)}></div>
-          <div className="absolute inset-y-0 right-0 max-w-full flex">
-            <div className="relative w-screen max-w-md">
-              <div className="h-full flex flex-col bg-[#1a2a4a] shadow-xl">
-                <div className="flex-1 overflow-y-auto py-6 px-4 sm:px-6">
-                  <div className="flex items-start justify-between">
-                    <h2 className="text-lg font-medium">Ostoskori</h2>
-                    <button
-                      onClick={() => setIsCartOpen(false)}
-                      className="text-gray-400 hover:text-white"
-                    >
-                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  
-                  <div className="mt-8">
-                    {cart.items.length === 0 ? (
-                      <div className="text-center py-12">
-                        <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-medium">Ostoskori on tyhjä</h3>
-                        <p className="mt-1 text-sm text-gray-500">Lisää tuotteita ostoskoriin</p>
-                      </div>
-                    ) : (
-                      <div className="flow-root">
-                        <ul className="-my-6 divide-y divide-gray-700">
-                          {cart.items.map((item) => (
-                            <li key={item.id} className="py-6 flex">
-                              <div className="flex-shrink-0 w-24 h-24 rounded-md overflow-hidden">
-                                <img
-                                  src="https://placehold.co/100x100/0B1220/28E0FF?text=VP"
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              
-                              <div className="ml-4 flex-1 flex flex-col">
-                                <div>
-                                  <div className="flex justify-between text-base font-medium">
-                                    <h3>{item.name}</h3>
-                                    <p className="ml-4">€{(item.price * item.quantity).toFixed(2)}</p>
-                                  </div>
-                                  <p className="mt-1 text-sm text-gray-400">€{item.price.toFixed(2)} / kpl</p>
-                                </div>
-                                <div className="flex-1 flex items-end justify-between text-sm">
-                                  <p className="text-gray-400">Määrä: {item.quantity}</p>
-                                </div>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {cart.items.length > 0 && (
-                  <div className="border-t border-gray-700 py-6 px-4 sm:px-6">
-                    <div className="space-y-4">
-                      <div className="flex justify-between text-base font-medium">
-                        <p>Välisumma</p>
-                        <p>€{cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</p>
-                      </div>
-                      
-                      <div className="flex justify-between">
-                        <p className="text-gray-400">Toimitus</p>
-                        <p className="text-gray-400">€{cart.pickup ? '0.00' : '4.90'}</p>
-                      </div>
-                      
-                      {cart.pickup && (
-                        <div className="text-sm text-[#FFC857] bg-[#FFC857]/10 p-3 rounded-lg">
-                          Noudat tapahtumasta - toimitus €0.00
-                        </div>
-                      )}
-                      
-                      <div className="flex justify-between text-lg font-bold">
-                        <p>Yhteensä</p>
-                        <p>€{getTotal().toFixed(2)}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-6">
-                      <button
-                        onClick={completeOrder}
-                        className="w-full bg-gradient-to-r from-[#28E0FF] to-[#7A5CFF] py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-[#28E0FF]/30 transition-all"
-                      >
-                        Vahvista tilaus
-                      </button>
-                    </div>
-                    
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        onClick={() => setIsCartOpen(false)}
-                        className="text-[#28E0FF] hover:text-[#28E0FF]/80"
-                      >
-                        Jatka ostoksia
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* JSON-LD Schema */}
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": "Valoisa NYT",
-          "url": "https://valoisanyt.fi",
-          "logo": "https://placehold.co/200x100/0B1220/28E0FF?text=Valoisa+Nyt",
-          "sameAs": [
-            "https://facebook.com/valoisanyt",
-            "https://twitter.com/valoisanyt"
-          ]
-        })}
-      </script>
-      
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org/",
-          "@type": "Product",
-          "name": "Valputki",
-          "image": "https://placehold.co/600x400/0B1220/28E0FF?text=Valputki",
-          "description": "Edullinen ja energiatehokas LED-valoputki messuille ja kotiin",
-          "sku": "VP-120-CW",
-          "brand": {
-            "@type": "Brand",
-            "name": "Valoisa NYT"
-          },
-          "offers": {
-            "@type": "Offer",
-            "url": "https://valoisanyt.fi",
-            "priceCurrency": "EUR",
-            "price": "5.00",
-            "priceValidUntil": "2024-12-31",
-            "itemCondition": "https://schema.org/NewCondition",
-            "availability": "https://schema.org/InStock",
-            "seller": {
-              "@type": "Organization",
-              "name": "Valoisa NYT"
-            }
-          }
-        })}
-      </script>
+      </div>
+      <nav class="nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#product">Product</a></li>
+          <li><a href="#event">Event</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+        <button id="open-cart" class="btn btn-ghost" aria-controls="cart-drawer" aria-expanded="false">Buy Valputki</button>
+      </nav>
     </div>
-  );
-};
+  </header>
 
-export default App;
+  <main id="main">
+    <section id="home" class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <h2>Valoisa NYT — Valon Kaupunki’s LED specialists</h2>
+          <p class="lead">Valputki — edullinen ja energiatehokas LED-valoputki messuille ja kotiin. Hinta <strong>€5.00</strong> / kpl.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary" href="#product">Buy Valputki</a>
+            <a class="btn btn-outline" href="#event">Find Us at the Event</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="neon-card">
+            <div class="neon-thumb">Valputki</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="product" class="product-section">
+      <div class="container">
+        <h3>Valputki</h3>
+        <div class="product-card">
+          <img src="__LOGO_DATA_URI__" alt="Valputki product image" class="product-image" loading="lazy">
+          <div class="product-details">
+            <h4>Valputki — LED light tube</h4>
+            <p class="muted">Edullinen, helppo asentaa. Yksi malli — yksi hinta.</p>
+            <ul class="specs">
+              <li>Length: 60 cm (example)</li>
+              <li>Power: 6W</li>
+              <li>Color: Cool White / Warm White</li>
+              <li>Warranty: 2 years</li>
+            </ul>
+            <div class="purchase-row">
+              <div class="price">€<span id="unit-price">5.00</span></div>
+              <div class="qty">
+                <label for="qty-input" class="visually-hidden">Quantity</label>
+                <input id="qty-input" type="number" min="1" value="1" aria-label="Quantity" />
+              </div>
+              <button id="add-to-cart" class="btn btn-primary">Add to Cart</button>
+            </div>
+            <div class="badges">
+              <span class="badge">Energy-efficient</span>
+              <span class="badge">2-year warranty</span>
+              <span class="badge">Event pickup</span>
+            </div>
+          </div>
+        </div>
+        <p class="note">Only one SKU — Valputki. Price is fixed at €5.00 per piece.</p>
+      </div>
+    </section>
+
+    <section id="event" class="event-section">
+      <div class="container">
+        <h3>Valon Kaupunki</h3>
+        <p>Tule tapaamaan meitä Valon Kaupunki -tapahtumassa! Nouto ja messutarjoukset paikan päällä. <strong>Pick-up at Event</strong> -option will set shipping to €0.</p>
+        <div class="event-grid">
+          <div>
+            <h4>When</h4>
+            <p>Dates: 01.01.2026 — 03.01.2026 (example)</p>
+          </div>
+          <div>
+            <h4>Where</h4>
+            <p>City center — Stand: B12 (example)</p>
+          </div>
+          <div>
+            <h4>Map</h4>
+            <div class="map-placeholder" aria-hidden="true">[Map placeholder]</div>
+          </div>
+        </div>
+
+        <label class="pickup-toggle">
+          <input id="pickup-toggle" type="checkbox" />
+          <span>Pick-up at Valon Kaupunki (Free pickup)</span>
+        </label>
+      </div>
+    </section>
+
+    <section id="about" class="about-section">
+      <div class="container">
+        <h3>Why Valoisa NYT</h3>
+        <div class="features">
+          <div class="feature">Reliable Valputki</div>
+          <div class="feature">Low price — €5 each</div>
+          <div class="feature">2-year warranty</div>
+          <div class="feature">Support FI / EN</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="faq-section">
+      <div class="container">
+        <h3>FAQ</h3>
+        <div class="accordion" id="faq-accordion">
+          <details>
+            <summary>Do you ship outside Finland?</summary>
+            <div class="answer">Shipping varies — this demo uses a simple example. Use Pick-up at Event to avoid shipping fees.</div>
+          </details>
+          <details>
+            <summary>What is the warranty?</summary>
+            <div class="answer">All Valputki products come with a 2-year warranty.</div>
+          </details>
+          <details>
+            <summary>Can I return an item?</summary>
+            <div class="answer">Returns accepted within 14 days with receipt. Demo only — no backend.</div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="contact-section">
+      <div class="container">
+        <h3>Contact</h3>
+        <form id="contact-form" novalidate>
+          <label for="name">Name</label>
+          <input id="name" type="text" required />
+          <label for="email">Email</label>
+          <input id="email" type="email" required />
+          <label for="message">Message</label>
+          <textarea id="message" rows="4"></textarea>
+          <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div>© Valoisa NYT — All rights reserved.</div>
+        <div class="newsletter">
+          <label for="newsletter-email" class="visually-hidden">Newsletter</label>
+          <input id="newsletter-email" type="email" placeholder="Get event-only deals" />
+          <button id="newsletter-btn" class="btn btn-ghost">Subscribe</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart drawer -->
+  <aside id="cart-drawer" class="cart-drawer" aria-hidden="true">
+    <div class="cart-header">
+      <h4>Your cart</h4>
+      <button id="close-cart" aria-label="Close cart">&times;</button>
+    </div>
+    <div class="cart-body" id="cart-body" aria-live="polite">
+      <p class="empty">Your cart is empty.</p>
+    </div>
+    <div class="cart-footer">
+      <label class="pickup-small">
+        <input id="pickup-small" type="checkbox" />
+        Pick-up at Valon Kaupunki (Free)
+      </label>
+      <div class="totals">
+        <div>Shipping: <span id="shipping">€2.50</span></div>
+        <div>Total: <strong id="total">€0.00</strong></div>
+      </div>
+      <button id="checkout-btn" class="btn btn-primary">Complete Order</button>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+  // inlined JS (same functionality as separate files)
+  (function (){const UNIT_PRICE=5.00;const qtyInput=document.getElementById('qty-input');const addBtn=document.getElementById('add-to-cart');const openCartBtn=document.getElementById('open-cart');const closeCartBtn=document.getElementById('close-cart');const cartDrawer=document.getElementById('cart-drawer');const cartBody=document.getElementById('cart-body');const shippingEl=document.getElementById('shipping');const totalEl=document.getElementById('total');const pickupToggle=document.getElementById('pickup-toggle');const pickupSmall=document.getElementById('pickup-small');const checkoutBtn=document.getElementById('checkout-btn');const toast=document.getElementById('toast');const pickupOptionSmall=document.getElementById('pickup-small');const openCart=document.getElementById('open-cart');let cart={qty:0,pickup:false};const KEY='valoisanyt_cart_v1';function showToast(msg,time=2000){toast.textContent=msg;toast.style.display='block';setTimeout(()=>{toast.style.display='none'},time)}function save(){localStorage.setItem(KEY,JSON.stringify(cart));}function load(){try{const raw=localStorage.getItem(KEY);if(raw)cart=JSON.parse(raw);}catch(e){}}function renderCart(){cartBody.innerHTML='';if(cart.qty<=0){cartBody.innerHTML='<p class="empty">Your cart is empty.</p>';}else{const item=document.createElement('div');item.className='cart-item';item.innerHTML = `<div><strong>Valputki</strong><div class="muted">€${UNIT_PRICE.toFixed(2)} each</div></div><div><div>${cart.qty} × €${UNIT_PRICE.toFixed(2)}</div><div style="font-weight:700">€${(cart.qty*UNIT_PRICE).toFixed(2)}</div></div>`;cartBody.appendChild(item);}const shipping=cart.pickup?0:2.50;shippingEl.textContent=`€${shipping.toFixed(2)}`;const total=(cart.qty*UNIT_PRICE)+shipping;totalEl.textContent=`€${total.toFixed(2)}`;if(pickupOptionSmall)pickupOptionSmall.checked=cart.pickup;}function addToCart(qty){cart.qty+=qty;save();renderCart();showToast('Added to cart 🎉');document.body.style.filter='brightness(1.02)';setTimeout(()=>document.body.style.filter='none',120);}load();renderCart();addBtn.addEventListener('click',()=>{const qty=Math.max(1,parseInt(qtyInput.value,10)||1);addToCart(qty);openCartDrawer();});openCartBtn.addEventListener('click',()=>{openCartDrawer();});openCart.addEventListener('keydown',(e)=>{if(e.key==='Enter')openCartDrawer();});if(closeCartBtn)closeCartBtn.addEventListener('click',closeCartDrawer);function openCartDrawer(){cartDrawer.classList.add('open');cartDrawer.setAttribute('aria-hidden','false');openCartBtn.setAttribute('aria-expanded','true');}function closeCartDrawer(){cartDrawer.classList.remove('open');cartDrawer.setAttribute('aria-hidden','true');openCartBtn.setAttribute('aria-expanded','false');}if(pickupToggle){pickupToggle.addEventListener('change',(e)=>{cart.pickup=e.target.checked;save();renderCart();});}if(pickupSmall){pickupSmall.addEventListener('change',(e)=>{cart.pickup=e.target.checked;save();renderCart();});}checkoutBtn.addEventListener('click',()=>{if(cart.qty<=0){showToast('Your cart is empty');return;}const shipping=cart.pickup?0:2.50;const total=(cart.qty*UNIT_PRICE)+shipping;cart={qty:0,pickup:false};save();renderCart();closeCartDrawer();showToast(`Order placed — Total: €${total.toFixed(2)} (demo)`);});const contactForm=document.getElementById('contact-form');contactForm.addEventListener('submit',(e)=>{e.preventDefault();const email=document.getElementById('email');if(!email.value||!email.value.includes('@')){showToast('Please enter a valid email');email.focus();return;}showToast('Message sent — we will reply shortly (demo)');contactForm.reset();});const newsletterBtn=document.getElementById('newsletter-btn');newsletterBtn.addEventListener('click',()=>{const el=document.getElementById('newsletter-email');if(!el.value||!el.value.includes('@')){showToast('Enter a valid email for newsletter');el.focus();return;}showToast('Subscribed — check your email (demo)');el.value='';});document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',function(e){e.preventDefault();const t=document.querySelector(this.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'});});});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCartDrawer();});})();
+  </script>
+</body>
+</html>
+"""
+
+html = html_template.replace("__LOGO_DATA_URI__", logo_data_uri)
+
+with open(OUT_FILE, "w", encoding="utf-8") as f:
+    f.write(html)
+
+print("Wrote single-file HTML to:", OUT_FILE)
+print("Size (KB):", round(os.path.getsize(OUT_FILE)/1024,1))
